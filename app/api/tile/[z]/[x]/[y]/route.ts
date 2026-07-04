@@ -6,8 +6,13 @@ import {
   TILE_CACHE,
   TILE_FETCH_REVALIDATE,
 } from "@/lib/cache-headers";
+import { applyCors, corsPreflightResponse } from "@/lib/cors";
 
 export const runtime = "edge";
+
+export function OPTIONS() {
+  return corsPreflightResponse();
+}
 
 export async function GET(
   request: NextRequest,
@@ -17,7 +22,7 @@ export async function GET(
   if (!key) {
     return new Response("GAODE_API_KEY not configured", {
       status: 500,
-      headers: { "Cache-Control": NO_CACHE },
+      headers: applyCors(new Headers({ "Cache-Control": NO_CACHE })),
     });
   }
 
@@ -52,14 +57,16 @@ export async function GET(
     if (!response.ok) {
       return new Response("Proxy error", {
         status: response.status,
-        headers: { "Cache-Control": NO_CACHE },
+        headers: applyCors(new Headers({ "Cache-Control": NO_CACHE })),
       });
     }
 
     const buffer = await response.arrayBuffer();
-    const headers = new Headers({
-      "Content-Type": response.headers.get("content-type") ?? "image/png",
-    });
+    const headers = applyCors(
+      new Headers({
+        "Content-Type": response.headers.get("content-type") ?? "image/png",
+      }),
+    );
     applyCacheHeaders(headers, TILE_CACHE);
 
     return new Response(buffer, { headers });
@@ -67,7 +74,7 @@ export async function GET(
     console.error("Tile proxy failed:", error);
     return new Response("Proxy failed", {
       status: 500,
-      headers: { "Cache-Control": NO_CACHE },
+      headers: applyCors(new Headers({ "Cache-Control": NO_CACHE })),
     });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { applyCacheHeaders, NO_CACHE, STYLE_CACHE } from "@/lib/cache-headers";
+import { applyCors, corsPreflightResponse } from "@/lib/cors";
 import {
   buildMapStyle,
   getBaseUrl,
@@ -16,6 +17,10 @@ function parseTheme(value: string | null): MapTheme | null {
   return null;
 }
 
+export function OPTIONS() {
+  return corsPreflightResponse();
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
 
@@ -23,7 +28,10 @@ export async function GET(request: NextRequest) {
   if (!theme) {
     return Response.json(
       { error: "theme must be light or dark" },
-      { status: 400, headers: { "Cache-Control": NO_CACHE } },
+      {
+        status: 400,
+        headers: applyCors(new Headers({ "Cache-Control": NO_CACHE })),
+      },
     );
   }
 
@@ -35,7 +43,10 @@ export async function GET(request: NextRequest) {
   if (backgroundColor && !isValidHexColor(backgroundColor)) {
     return Response.json(
       { error: "background color must be a hex value like #f8f4f0" },
-      { status: 400, headers: { "Cache-Control": NO_CACHE } },
+      {
+        status: 400,
+        headers: applyCors(new Headers({ "Cache-Control": NO_CACHE })),
+      },
     );
   }
 
@@ -45,7 +56,7 @@ export async function GET(request: NextRequest) {
     backgroundColor: backgroundColor ?? undefined,
   });
 
-  const headers = new Headers({ "Content-Type": "application/json" });
+  const headers = applyCors(new Headers({ "Content-Type": "application/json" }));
   applyCacheHeaders(headers, STYLE_CACHE);
 
   return Response.json(style, { headers });
