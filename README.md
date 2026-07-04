@@ -56,7 +56,7 @@ https://你的域名.vercel.app/api/style?theme=dark&bg=#0d1117
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
-| `style` | 高德样式（7=亮色路网，8=暗色路网） | `7` |
+| `style` | 高德样式（常用：7=矢量路网，8=影像路网） | `7` |
 | `lang` | 语言 | `zh_cn` |
 | `size` | 瓦片尺寸 | `1` |
 | `scale` | 缩放倍率 | `1` |
@@ -88,6 +88,8 @@ pnpm dev
 ## 关于 GPS 偏移
 
 照片 EXIF 中的 GPS 为 **WGS84** 坐标，高德底图为 **GCJ-02**（火星坐标）。本项目默认会在 `/api/tile` 中把输入 z/x/y 按 **WGS84→GCJ-02** 进行瓦片换算后再请求高德，以减少叠图偏移。若要对比原始行为，可附加 `transform=0` 关闭换算。
+
+> 说明：`appmaptile` 的 `style=6/7/8` 并不等同于 JS API 的官方 `amap://styles/dark`。本项目的 dark 模式使用 `style=7` 底图并叠加栅格暗色滤镜，在 Immich 中提供更接近深色主题的效果。
 
 ## 技术栈
 

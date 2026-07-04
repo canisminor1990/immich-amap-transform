@@ -11,7 +11,7 @@ const THEME_DEFAULTS: Record<
   },
   dark: {
     backgroundColor: "#0d1117",
-    gaodeStyle: "8",
+    gaodeStyle: "7",
     name: "Gaode-Immich-Dark",
   },
 };
@@ -27,6 +27,17 @@ export function buildMapStyle(options: {
 }) {
   const theme = options.theme ?? "light";
   const defaults = THEME_DEFAULTS[theme];
+  const darkRasterPaint =
+    theme === "dark"
+      ? {
+          // appmaptile does not expose JS API dark theme directly for raster use.
+          // Use a dark raster transform to approximate dark-mode basemap in Immich.
+          "raster-saturation": -0.85,
+          "raster-contrast": 0.35,
+          "raster-brightness-min": 0.02,
+          "raster-brightness-max": 0.58,
+        }
+      : undefined;
 
   return {
     version: 8 as const,
@@ -53,6 +64,7 @@ export function buildMapStyle(options: {
         id: "gaode",
         type: "raster" as const,
         source: "gaode",
+        ...(darkRasterPaint ? { paint: darkRasterPaint } : {}),
       },
     ],
     glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
