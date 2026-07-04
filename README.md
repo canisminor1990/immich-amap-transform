@@ -60,6 +60,7 @@ https://你的域名.vercel.app/api/style?theme=dark&bg=#0d1117
 | `lang` | 语言 | `zh_cn` |
 | `size` | 瓦片尺寸 | `1` |
 | `scale` | 缩放倍率 | `1` |
+| `transform` | `1`=将输入 zxy 按 WGS84→GCJ-02 换算后请求高德；`0`=关闭换算 | `1` |
 
 ## 本地开发
 
@@ -86,7 +87,7 @@ pnpm dev
 
 ## 关于 GPS 偏移
 
-照片 EXIF 中的 GPS 为 **WGS84** 坐标，高德底图为 **GCJ-02**（火星坐标）。本项目的瓦片代理 **不解决坐标偏移**；若照片打点与道路错位，需要在 Immich 侧做 WGS84 → GCJ-02 转换，或换用 WGS84 底图。
+照片 EXIF 中的 GPS 为 **WGS84** 坐标，高德底图为 **GCJ-02**（火星坐标）。本项目默认会在 `/api/tile` 中把输入 z/x/y 按 **WGS84→GCJ-02** 进行瓦片换算后再请求高德，以减少叠图偏移。若要对比原始行为，可附加 `transform=0` 关闭换算。
 
 ## 技术栈
 
