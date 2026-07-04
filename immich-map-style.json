@@ -1,0 +1,28 @@
+{
+  "version": 8,
+  "name": "Gaode-Immich",
+  "sources": {
+    "gaode": {
+      "type": "raster",
+      "tiles": [
+        "https://YOUR_VERCEL_DOMAIN.vercel.app/api/tile/{z}/{x}/{y}"
+      ],
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#f8f4f0"
+      }
+    },
+    {
+      "id": "gaode",
+      "type": "raster",
+      "source": "gaode"
+    }
+  ],
+  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf"
+}
