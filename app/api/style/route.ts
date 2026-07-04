@@ -1,10 +1,13 @@
 import { NextRequest } from "next/server";
+import { applyCacheHeaders, NO_CACHE, STYLE_CACHE } from "@/lib/cache-headers";
 import {
   buildMapStyle,
   getBaseUrl,
   isValidHexColor,
   type MapTheme,
 } from "@/lib/map-style";
+
+export const runtime = "edge";
 
 function parseTheme(value: string | null): MapTheme | null {
   if (value === "light" || value === "dark") {
@@ -20,7 +23,7 @@ export async function GET(request: NextRequest) {
   if (!theme) {
     return Response.json(
       { error: "theme must be light or dark" },
-      { status: 400 },
+      { status: 400, headers: { "Cache-Control": NO_CACHE } },
     );
   }
 
@@ -32,7 +35,7 @@ export async function GET(request: NextRequest) {
   if (backgroundColor && !isValidHexColor(backgroundColor)) {
     return Response.json(
       { error: "background color must be a hex value like #f8f4f0" },
-      { status: 400 },
+      { status: 400, headers: { "Cache-Control": NO_CACHE } },
     );
   }
 
@@ -42,9 +45,8 @@ export async function GET(request: NextRequest) {
     backgroundColor: backgroundColor ?? undefined,
   });
 
-  return Response.json(style, {
-    headers: {
-      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-    },
-  });
+  const headers = new Headers({ "Content-Type": "application/json" });
+  applyCacheHeaders(headers, STYLE_CACHE);
+
+  return Response.json(style, { headers });
 }

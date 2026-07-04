@@ -1,6 +1,13 @@
 import { NextRequest } from "next/server";
+import {
+  applyCacheHeaders,
+  NO_CACHE,
+  pickSubdomain,
+  TILE_CACHE,
+  TILE_FETCH_REVALIDATE,
+} from "@/lib/cache-headers";
 
-const SUBDOMAINS = ["01", "02", "03", "04"];
+export const runtime = "edge";
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +15,10 @@ export async function GET(
 ) {
   const key = process.env.GAODE_API_KEY;
   if (!key) {
-    return new Response("GAODE_API_KEY not configured", { status: 500 });
+    return new Response("GAODE_API_KEY not configured", {
+      status: 500,
+      headers: { "Cache-Control": NO_CACHE },
+    });
   }
 
   const { z, x, y } = params;
@@ -19,7 +29,7 @@ export async function GET(
   const size = searchParams.get("size") ?? "1";
   const scale = searchParams.get("scale") ?? "1";
 
-  const subdomain = SUBDOMAINS[Math.floor(Math.random() * SUBDOMAINS.length)];
+  const subdomain = pickSubdomain(x, y);
   const gaodeUrl =
     `https://webrd${subdomain}.is.autonavi.com/appmaptile` +
     `?key=${encodeURIComponent(key)}` +
@@ -36,22 +46,28 @@ export async function GET(
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; Immich-Proxy/1.0)",
       },
+      next: { revalidate: TILE_FETCH_REVALIDATE },
     });
 
     if (!response.ok) {
-      return new Response("Proxy error", { status: response.status });
+      return new Response("Proxy error", {
+        status: response.status,
+        headers: { "Cache-Control": NO_CACHE },
+      });
     }
 
     const buffer = await response.arrayBuffer();
-
-    return new Response(buffer, {
-      headers: {
-        "Content-Type": response.headers.get("content-type") ?? "image/png",
-        "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
-      },
+    const headers = new Headers({
+      "Content-Type": response.headers.get("content-type") ?? "image/png",
     });
+    applyCacheHeaders(headers, TILE_CACHE);
+
+    return new Response(buffer, { headers });
   } catch (error) {
     console.error("Tile proxy failed:", error);
-    return new Response("Proxy failed", { status: 500 });
+    return new Response("Proxy failed", {
+      status: 500,
+      headers: { "Cache-Control": NO_CACHE },
+    });
   }
 }
